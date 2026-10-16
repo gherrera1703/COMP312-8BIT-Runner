@@ -18,8 +18,20 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        // Get horizontal movement input
         horizontalInput = Input.GetAxisRaw("Horizontal");
 
+        // Face the direction the player is moving
+        if (horizontalInput > 0)
+        {
+            transform.localScale = new Vector3(1, 1, 1);
+        }
+        else if (horizontalInput < 0)
+        {
+            transform.localScale = new Vector3(-1, 1, 1);
+        }
+
+        // Jump only when touching the ground
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
             jumpRequested = true;
@@ -28,14 +40,20 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
+        // Move left and right
         rb.linearVelocity = new Vector2(
             horizontalInput * moveSpeed,
             rb.linearVelocity.y
         );
 
+        // Apply jumping force
         if (jumpRequested)
         {
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            rb.AddForce(
+                Vector2.up * jumpForce,
+                ForceMode2D.Impulse
+            );
+
             jumpRequested = false;
             isGrounded = false;
         }
