@@ -662,6 +662,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 100
   currentHealth: 1
+  knockbackForce: 5
+  knockbackUpwardForce: 2
 --- !u!61 &1040544642
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -802,11 +804,6 @@ MonoBehaviour:
   chaseSpeed: 2
   stoppingDistance: 0.8
   knockbackDuration: 0.3
-  rb: {fileID: 0}
-  player: {fileID: 0}
-  startingX: 0
-  direction: 1
-  knockbackEndTime: 0
 --- !u!114 &1040544646
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -822,9 +819,6 @@ MonoBehaviour:
   attackRange: 1.5
   attackDamage: 20
   attackCooldown: 1.5
-  player: {fileID: 0}
-  playerHealth: {fileID: 0}
-  nextAttackTime: 0
 --- !u!50 &1040544647
 Rigidbody2D:
   serializedVersion: 5
@@ -1756,7 +1750,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b93e3e314956bb43af30896a7c97989, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelComplete
-  levelFinished: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
