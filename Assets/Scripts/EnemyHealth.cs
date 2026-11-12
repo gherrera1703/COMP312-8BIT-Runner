@@ -37,8 +37,14 @@ public class EnemyHealth : MonoBehaviour
     // Runs whenever the enemy takes damage
     public void TakeDamage(int damage)
     {
+        TakeDamage(damage, 1f);
+    }
+
+    public void TakeDamage(int damage, float knockbackMultiplier)
+    {
         // Reduce the enemy's health
         currentHealth = Mathf.Max(0, currentHealth - damage);
+        FloatingFeedback.Show(transform.position + Vector3.up, "-" + damage, Color.yellow);
 
         // Display remaining health
         Debug.Log("Enemy Health: " + currentHealth);
@@ -74,8 +80,8 @@ public class EnemyHealth : MonoBehaviour
             // Push the enemy backward and upward
             rb.AddForce(
                 new Vector2(
-                    direction * knockbackForce,
-                    knockbackUpwardForce
+                    direction * knockbackForce * knockbackMultiplier,
+                    knockbackUpwardForce * knockbackMultiplier
                 ),
                 ForceMode2D.Impulse
             );
