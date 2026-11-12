@@ -18,6 +18,9 @@ public class LevelComplete : MonoBehaviour
         // Check if the object touching the flag is the player
         if (other.gameObject.name == "Player")
         {
+            var health = other.GetComponent<PlayerHealth>();
+            if (health != null && health.IsGameOver) return;
+
             // Mark the level as completed
             levelFinished = true;
 
@@ -56,12 +59,20 @@ public class LevelComplete : MonoBehaviour
 
             // Stop all enemies when the level is completed
             StopEnemies();
+            var flow = FindAnyObjectByType<GameFlow>();
+            if (flow != null) flow.CompleteLevel();
         }
     }
 
     // Stops enemy movement and attacks
     void StopEnemies()
     {
+        // Remove shots already in flight when the player wins.
+        foreach (var projectile in FindObjectsByType<EnemyProjectile>())
+            Destroy(projectile.gameObject);
+        foreach (var projectile in FindObjectsByType<PlayerProjectile>())
+            Destroy(projectile.gameObject);
+
         // Find all active enemies with patrol scripts
         EnemyPatrol[] enemies =
             FindObjectsByType<EnemyPatrol>(
@@ -101,7 +112,7 @@ public class LevelComplete : MonoBehaviour
     void OnGUI()
     {
         // Only display the message after winning
-        if (levelFinished)
+        if (levelFinished && FindAnyObjectByType<GameFlow>() == null)
         {
             // Create the victory message style
             GUIStyle style = new GUIStyle(GUI.skin.label);

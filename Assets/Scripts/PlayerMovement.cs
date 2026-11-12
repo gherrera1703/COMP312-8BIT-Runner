@@ -1,77 +1,64 @@
-
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
     public float jumpForce = 10f;
-
+    [Header("Jump forgiveness")]
+    public float coyoteTime = 0.12f;
+    public float jumpBufferTime = 0.15f;
     private Rigidbody2D rb;
     private float horizontalInput;
-    private bool jumpRequested;
-    private bool isGrounded;
+    private float lastGroundedTime = float.NegativeInfinity;
+    private float lastJumpPressedTime = float.NegativeInfinity;
+    private float ignoreGroundUntil;
+    private readonly RaycastHit2D[] groundHits = new RaycastHit2D[12];
 
-    void Awake()
-    {
-        rb = GetComponent<Rigidbody2D>();
-    }
+    void Awake() { rb = GetComponent<Rigidbody2D>(); }
 
     void Update()
     {
-        // Get horizontal movement input
+        if (Time.timeScale <= 0f) return;
         horizontalInput = Input.GetAxisRaw("Horizontal");
-
-        // Face the direction the player is moving
-        if (horizontalInput > 0)
-        {
-            transform.localScale = new Vector3(1, 1, 1);
-        }
-        else if (horizontalInput < 0)
-        {
-            transform.localScale = new Vector3(-1, 1, 1);
-        }
-
-        // Jump only when touching the ground
-        if (Input.GetButtonDown("Jump") && isGrounded)
-        {
-            jumpRequested = true;
-        }
+        if (horizontalInput != 0f)
+            transform.localScale = new Vector3(Mathf.Sign(horizontalInput), 1f, 1f);
+        if (Input.GetButtonDown("Jump")) lastJumpPressedTime = Time.time;
     }
 
     void FixedUpdate()
     {
-        // Move left and right
-        rb.linearVelocity = new Vector2(
-            horizontalInput * moveSpeed,
-            rb.linearVelocity.y
-        );
-
-        // Apply jumping force
-        if (jumpRequested)
+        var filter = new ContactFilter2D();
+        filter.useTriggers = false;
+        int count = rb.Cast(Vector2.down, filter, groundHits, 0.06f);
+        if (Time.time >= ignoreGroundUntil && rb.linearVelocity.y <= 0.1f)
         {
-            rb.AddForce(
-                Vector2.up * jumpForce,
-                ForceMode2D.Impulse
-            );
-
-            jumpRequested = false;
-            isGrounded = false;
+            for (int i = 0; i < count; i++)
+            {
+                if (groundHits[i].normal.y > 0.5f && groundHits[i].collider.CompareTag("Ground"))
+                {
+                    lastGroundedTime = Time.time;
+                    break;
+                }
+            }
+        }
+        rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
+        bool bufferedJump = Time.time - lastJumpPressedTime <= jumpBufferTime;
+        bool canJump = Time.time - lastGroundedTime <= coyoteTime;
+        if (bufferedJump && canJump)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            lastJumpPressedTime = float.NegativeInfinity;
+            lastGroundedTime = float.NegativeInfinity;
+            ignoreGroundUntil = Time.time + 0.1f;
         }
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
+    public void ResetAfterRespawn()
     {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = true;
-        }
-    }
-
-    void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = false;
-        }
+        horizontalInput = 0f;
+        lastJumpPressedTime = float.NegativeInfinity;
+        lastGroundedTime = float.NegativeInfinity;
+        ignoreGroundUntil = Time.time + 0.1f;
     }
 }
